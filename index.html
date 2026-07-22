@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAL Targets - M&amp;A Trademark Acquisition Dashboard</title>
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Pre-compiled Local Data script -->
+<script src="data.js"></script>
+<script src="chart.umd.min.js"></script>
+<script src="html2pdf.bundle.min.js"></script>
+<style>
+:root {
+  --primary: #0f172a; /* Sophisticated deep navy slate */
+  --primary-light: #1e293b; /* Indigo Slate */
+  --primary-hover: #3b82f6; /* Modern Blue */
+  --accent: #06b6d4; /* Vibrant Cyan */
+  --accent-hover: #0891b2;
+  --bg: #f8fafc; /* Premium smooth cool-gray background */
+  --card: #ffffff;
+  --card-border: rgba(226, 232, 240, 0.8);
+  --text: #0f172a;
+  --text-sec: #475569;
+  --border: #e2e8f0;
+  --green: #10b981; /* Premium Emerald */
+  --green-bg: #ecfdf5;
+  --red: #ef4444; /* Premium Rose Red */
+  --red-bg: #fef2f2;
+  --orange: #f59e0b; /* Amber */
+  --orange-bg: #fffbeb;
+  --blue: #3b82f6;
+  --blue-bg: #eff6ff;
+  --purple: #8b5cf6;
+  --purple-bg: #f5f3ff;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+.header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-lg); flex-wrap: wrap; gap: 16px; border-bottom: 4px solid var(--accent); }
+.header h1 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 700; letter-spacing: -0.5px; }
+.header .subtitle { font-size: .9rem; opacity: .8; margin-top: 4px; font-weight: 400; }
+.header-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: .88rem; font-weight: 600; transition: all .2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 4px rgba(6, 182, 212, 0.2); }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-outline { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,.2); }
+.btn-outline:hover { background: rgba(255,255,255,.18); transform: translateY(-1px); }
+.loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+.spinner { width: 56px; height: 56px; border: 5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { margin-top: 20px; color: var(--text); font-size: 1rem; font-weight: 600; text-align: center; }
+.progress-bar { width: 320px; height: 8px; background: var(--border); border-radius: 4px; margin-top: 16px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--primary-hover)); transition: width .3s ease; width: 0%; }
+.error-box { background: #fff; border-left: 6px solid var(--red); border-radius: 12px; padding: 28px; max-width: 720px; margin-top: 24px; box-shadow: var(--shadow-lg); }
+.error-box h2 { color: var(--red); margin-bottom: 12px; font-size: 1.3rem; font-family: 'Outfit', sans-serif; }
+.error-box p { margin: 8px 0; font-size: .95rem; line-height: 1.6; color: var(--text-sec); }
+.error-box code { background: #f1f5f9; padding: 3px 6px; border-radius: 4px; font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: .9em; color: var(--primary-light); }
+.container { max-width: 1512px; margin: 0 auto; padding: 28px; display: flex; flex-direction: column; gap: 24px; }
+.filters-panel { background: var(--card); border-radius: 14px; padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--card-border); }
+.filters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.filter-group label { display: block; font-size: .72rem; font-weight: 700; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+.filter-group select, .filter-group input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: .88rem; background: #fff; color: var(--text); transition: all .15s ease; font-weight: 500; }
+.filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--primary-hover); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+.filter-actions { display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end; align-items: center; border-top: 1px solid var(--border); padding-top: 16px; }
+.filter-actions .filter-status { margin-right: auto; font-size: .88rem; color: var(--text-sec); font-weight: 600; background: var(--blue-bg); color: var(--blue); padding: 4px 12px; border-radius: 20px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.kpi-card { background: var(--card); border-radius: 14px; padding: 24px; box-shadow: var(--shadow); border-left: 5px solid var(--primary-light); border-top: 1px solid var(--card-border); border-right: 1px solid var(--card-border); border-bottom: 1px solid var(--card-border); transition: transform 0.2s, box-shadow 0.2s; }
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.kpi-card .kpi-label { font-size: .72rem; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; }
+.kpi-card .kpi-value { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 700; color: var(--primary); margin-top: 6px; letter-spacing: -0.5px; }
+.kpi-card .kpi-sub { font-size: .8rem; color: var(--text-sec); margin-top: 4px; font-weight: 500; }
+.kpi-card.green { border-left-color: var(--green); }
+.kpi-card.green .kpi-value { color: var(--green); }
+.kpi-card.accent { border-left-color: var(--accent); }
+.kpi-card.accent .kpi-value { color: var(--accent-hover); }
+.kpi-card.orange { border-left-color: var(--orange); }
+.kpi-card.orange .kpi-value { color: var(--orange); }
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.chart-card { background: var(--card); border-radius: 14px; padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--card-border); display: flex; flex-direction: column; }
+.chart-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.05rem; color: var(--primary); margin-bottom: 16px; font-weight: 600; letter-spacing: -0.2px; }
+.chart-card canvas { max-height: 340px; width: 100% !important; }
+.chart-card.full { grid-column: 1 / -1; }
+.table-section { background: var(--card); border-radius: 14px; padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--card-border); }
+.table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+.table-header h3 { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+.table-wrapper { overflow-x: auto; max-height: 600px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+thead th { background: var(--primary); color: #fff; padding: 12px 14px; text-align: left; position: sticky; top: 0; z-index: 2; cursor: pointer; white-space: nowrap; user-select: none; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.5px; border-bottom: 2px solid var(--accent); transition: background 0.15s; }
+thead th:hover { background: var(--primary-light); }
+thead th .sort-arrow { margin-left: 6px; font-size: .7rem; opacity: .6; display: inline-block; }
+thead th.sort-active { color: var(--accent); }
+thead th.sort-active .sort-arrow { opacity: 1; }
+tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; font-weight: 500; color: var(--text-sec); }
+tbody tr:hover { background: #f8fafc; }
+tbody tr:nth-child(even) { background: #fafafa; }
+tbody tr:nth-child(even):hover { background: #f8fafc; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.pos { color: var(--green); font-weight: 600; }
+.neg { color: var(--red); font-weight: 600; }
+.badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+.badge-alta { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.2); }
+.badge-media { background: var(--orange-bg); color: var(--orange); border: 1px solid rgba(245, 158, 11, 0.2); }
+.badge-baja { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.2); }
+.badge-nd { background: #f1f5f9; color: #64748b; }
+.badge-patente { background: var(--blue-bg); color: var(--blue); border: 1px solid rgba(59, 130, 246, 0.2); }
+.badge-sinpatente { background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(139, 92, 246, 0.2); }
+.tab-bar { display: flex; gap: 6px; margin-bottom: 8px; border-bottom: 2px solid var(--border); padding-bottom: 2px; flex-wrap: wrap; }
+.tab-btn { padding: 12px 24px; border: none; background: none; cursor: pointer; font-size: .9rem; color: var(--text-sec); border-bottom: 3px solid transparent; transition: all .2s; font-weight: 600; font-family: 'Outfit', sans-serif; }
+.tab-btn.active { color: var(--primary-hover); border-bottom-color: var(--primary-hover); }
+.tab-btn:hover { color: var(--primary-hover); }
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.25s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.search-input { padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: .88rem; width: 260px; font-weight: 500; }
+.search-input:focus { outline: none; border-color: var(--primary-hover); }
+.empty-state { text-align: center; padding: 48px 24px; color: var(--text-sec); font-weight: 500; }
+
+/* ====== MATRIX STRATEGICA ====== */
+.matrix-container { display: flex; flex-direction: column; gap: 20px; background: var(--card); padding: 24px; border-radius: 16px; border: 1px solid var(--card-border); box-shadow: var(--shadow); }
+.matrix-header h3 { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+.matrix-header p { font-size: 0.9rem; color: var(--text-sec); font-weight: 500; }
+.matrix-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 8px; }
+.quadrant { background: #f8fafc; border-radius: 12px; padding: 18px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; min-height: 380px; }
+.quadrant-title { display: flex; flex-direction: column; gap: 4px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+.quadrant-badge { font-size: 0.9rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; width: fit-content; }
+.quadrant-desc { font-size: 0.74rem; color: var(--text-sec); text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; }
+.quadrant-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 420px; padding-right: 4px; }
+.matrix-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+.matrix-card:hover { transform: translateY(-2px) scale(1.01); border-color: var(--primary-hover); box-shadow: var(--shadow-lg); }
+.matrix-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.matrix-card-header strong { font-size: 0.92rem; color: var(--text); font-weight: 700; }
+.matrix-card-body { font-size: 0.8rem; color: var(--text-sec); line-height: 1.5; }
+.matrix-card-body span { font-weight: 700; color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.3px; }
+
+@media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } .matrix-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .filters-grid { grid-template-columns: 1fr 1fr; } .kpi-row { grid-template-columns: 1fr 1fr; } .search-input { width: 100%; } }
+@media (max-width: 480px) { .filters-grid { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: 1fr; } }
+@media print { .header-actions, .filters-panel, .filter-actions, .tab-bar, .search-input, .header .btn { display: none !important; } .chart-card { break-inside: avoid; } .tab-content { display: block !important; } }
+
+/* ====== CUSTOM MULTISELECT DROPDOWN ====== */
+.dropdown-container {
+  position: relative;
+}
+.dropdown-trigger {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: .88rem;
+  background: #fff;
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  transition: all .15s ease;
+}
+.dropdown-trigger:hover {
+  border-color: var(--primary-hover);
+}
+.dropdown-trigger.open {
+  border-color: var(--primary-hover);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.dropdown-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 20px);
+}
+.dropdown-arrow {
+  font-size: 0.75rem;
+  color: var(--text-sec);
+  transition: transform 0.2s;
+}
+.dropdown-trigger.open .dropdown-arrow {
+  transform: rotate(180deg);
+}
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  margin-top: 6px;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+.dropdown-menu.show {
+  display: flex;
+}
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.dropdown-menu-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: #f8fafc;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+.dropdown-menu-header .btn-link {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--primary-hover);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.dropdown-menu-header .btn-link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+.dropdown-options {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+.dropdown-option:hover {
+  background: #f1f5f9;
+}
+.dropdown-option input[type="checkbox"] {
+  margin-right: 8px;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--primary-hover);
+}
+.dropdown-option label {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-sec);
+  margin-bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner" id="spinner"></div>
+  <div class="loading-text" id="loadingText">Cargando datos...</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div id="errorContainer"></div>
+</div>
+
+<div class="header">
+  <div>
+    <h1>RAL Targets Dashboard</h1>
+    <div class="subtitle">Análisis de Mercado Farmacéutico - Identificación de Marcas Target M&amp;A</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="exportPDF()">Exportar PDF</button>
+    <button class="btn btn-outline" onclick="location.reload()">Recargar</button>
+  </div>
+</div>
+
+<div class="container" id="mainContent" style="display:none">
+  <!-- Filters -->
+  <div class="filters-panel">
+    <div class="filters-grid">
+      <!-- Clase Terapéutica -->
+      <div class="filter-group dropdown-container" id="container-filterCT">
+        <label>Clase Terapéutica</label>
+        <div class="dropdown-trigger" onclick="toggleDropdown(event, 'filterCT')">
+          <span class="dropdown-text" id="text-filterCT">Todas</span>
+          <span class="dropdown-arrow">&#9662;</span>
+        </div>
+        <div class="dropdown-menu" id="menu-filterCT">
+          <div class="dropdown-menu-header">
+            <span class="btn-link" onclick="selectAllOptions(event, 'filterCT')">Todos</span>
+            <span class="btn-link" onclick="clearAllOptions(event, 'filterCT')">Limpiar</span>
+          </div>
+          <div class="dropdown-options" id="options-filterCT"></div>
+        </div>
+      </div>
+
+      <!-- Género -->
+      <div class="filter-group dropdown-container" id="container-filterGenero">
+        <label>Género</label>
+        <div class="dropdown-trigger" onclick="toggleDropdown(event, 'filterGenero')">
+          <span class="dropdown-text" id="text-filterGenero">Todas</span>
+          <span class="dropdown-arrow">&#9662;</span>
+        </div>
+        <div class="dropdown-menu" id="menu-filterGenero">
+          <div class="dropdown-menu-header">
+            <span class="btn-link" onclick="selectAllOptions(event, 'filterGenero')">Todos</span>
+            <span class="btn-link" onclick="clearAllOptions(event, 'filterGenero')">Limpiar</span>
+          </div>
+          <div class="dropdown-options" id="options-filterGenero"></div>
+        </div>
+      </div>
+
+      <!-- Corporación -->
+      <div class="filter-group dropdown-container" id="container-filterCorp">
+        <label>Corporación</label>
+        <div class="dropdown-trigger" onclick="toggleDropdown(event, 'filterCorp')">
+          <span class="dropdown-text" id="text-filterCorp">Todas</span>
+          <span class="dropdown-arrow">&#9662;</span>
+        </div>
+        <div class="dropdown-menu" id="menu-filterCorp">
+          <div class="dropdown-menu-header">
+            <span class="btn-link" onclick="selectAllOptions(event, 'filterCorp')">Todos</span>
+            <span class="btn-link" onclick="clearAllOptions(event, 'filterCorp')">Limpiar</span>
+          </div>
+          <div class="dropdown-options" id="options-filterCorp"></div>
+        </div>
+      </div>
+
+      <!-- Probabilidad -->
+      <div class="filter-group dropdown-container" id="container-filterProb">
+        <label>Probabilidad</label>
+        <div class="dropdown-trigger" onclick="toggleDropdown(event, 'filterProb')">
+          <span class="dropdown-text" id="text-filterProb">Todas</span>
+          <span class="dropdown-arrow">&#9662;</span>
+        </div>
+        <div class="dropdown-menu" id="menu-filterProb">
+          <div class="dropdown-menu-header">
+            <span class="btn-link" onclick="selectAllOptions(event, 'filterProb')">Todos</span>
+            <span class="btn-link" onclick="clearAllOptions(event, 'filterProb')">Limpiar</span>
+          </div>
+          <div class="dropdown-options" id="options-filterProb"></div>
+        </div>
+      </div>
+
+      <!-- Objetivo -->
+      <div class="filter-group dropdown-container" id="container-filterObj">
+        <label>Objetivo</label>
+        <div class="dropdown-trigger" onclick="toggleDropdown(event, 'filterObj')">
+          <span class="dropdown-text" id="text-filterObj">Todas</span>
+          <span class="dropdown-arrow">&#9662;</span>
+        </div>
+        <div class="dropdown-menu" id="menu-filterObj">
+          <div class="dropdown-menu-header">
+            <span class="btn-link" onclick="selectAllOptions(event, 'filterObj')">Todos</span>
+            <span class="btn-link" onclick="clearAllOptions(event, 'filterObj')">Limpiar</span>
+          </div>
+          <div class="dropdown-options" id="options-filterObj"></div>
+        </div>
+      </div>
+
+      <!-- Nivel Lab -->
+      <div class="filter-group dropdown-container" id="container-filterNivel">
+        <label>Nivel Lab</label>
+        <div class="dropdown-trigger" onclick="toggleDropdown(event, 'filterNivel')">
+          <span class="dropdown-text" id="text-filterNivel">Todas</span>
+          <span class="dropdown-arrow">&#9662;</span>
+        </div>
+        <div class="dropdown-menu" id="menu-filterNivel">
+          <div class="dropdown-menu-header">
+            <span class="btn-link" onclick="selectAllOptions(event, 'filterNivel')">Todos</span>
+            <span class="btn-link" onclick="clearAllOptions(event, 'filterNivel')">Limpiar</span>
+          </div>
+          <div class="dropdown-options" id="options-filterNivel"></div>
+        </div>
+      </div>
+
+      <!-- Patente -->
+      <div class="filter-group dropdown-container" id="container-filterPatente">
+        <label>Patente</label>
+        <div class="dropdown-trigger" onclick="toggleDropdown(event, 'filterPatente')">
+          <span class="dropdown-text" id="text-filterPatente">Todas</span>
+          <span class="dropdown-arrow">&#9662;</span>
+        </div>
+        <div class="dropdown-menu" id="menu-filterPatente">
+          <div class="dropdown-menu-header">
+            <span class="btn-link" onclick="selectAllOptions(event, 'filterPatente')">Todos</span>
+            <span class="btn-link" onclick="clearAllOptions(event, 'filterPatente')">Limpiar</span>
+          </div>
+          <div class="dropdown-options" id="options-filterPatente"></div>
+        </div>
+      </div>
+
+      <!-- Interés Comercial -->
+      <div class="filter-group dropdown-container" id="container-filterInteres">
+        <label>Interés Comercial</label>
+        <div class="dropdown-trigger" onclick="toggleDropdown(event, 'filterInteres')">
+          <span class="dropdown-text" id="text-filterInteres">Todas</span>
+          <span class="dropdown-arrow">&#9662;</span>
+        </div>
+        <div class="dropdown-menu" id="menu-filterInteres">
+          <div class="dropdown-menu-header">
+            <span class="btn-link" onclick="selectAllOptions(event, 'filterInteres')">Todos</span>
+            <span class="btn-link" onclick="clearAllOptions(event, 'filterInteres')">Limpiar</span>
+          </div>
+          <div class="dropdown-options" id="options-filterInteres"></div>
+        </div>
+      </div>
+
+      <!-- Prioridad M&A -->
+      <div class="filter-group dropdown-container" id="container-filterMA">
+        <label>Prioridad M&amp;A</label>
+        <div class="dropdown-trigger" onclick="toggleDropdown(event, 'filterMA')">
+          <span class="dropdown-text" id="text-filterMA">Todas</span>
+          <span class="dropdown-arrow">&#9662;</span>
+        </div>
+        <div class="dropdown-menu" id="menu-filterMA">
+          <div class="dropdown-menu-header">
+            <span class="btn-link" onclick="selectAllOptions(event, 'filterMA')">Todos</span>
+            <span class="btn-link" onclick="clearAllOptions(event, 'filterMA')">Limpiar</span>
+          </div>
+          <div class="dropdown-options" id="options-filterMA"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <span class="filter-status" id="filterStatus"></span>
+      <button class="btn" style="background:#f1f5f9;color:var(--text)" onclick="resetFilters()">Limpiar Filtros</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card"><div class="kpi-label">Marcas Target</div><div class="kpi-value" id="kpiMarcas">-</div><div class="kpi-sub" id="kpiMarcasSub"></div></div>
+    <div class="kpi-card green"><div class="kpi-label">MAT Valores (MDP)</div><div class="kpi-value" id="kpiValores">-</div><div class="kpi-sub" id="kpiValoresSub"></div></div>
+    <div class="kpi-card accent"><div class="kpi-label">MAT Unidades (M)</div><div class="kpi-value" id="kpiUnidades">-</div><div class="kpi-sub" id="kpiUnidadesSub"></div></div>
+    <div class="kpi-card orange"><div class="kpi-label">Precio Promedio</div><div class="kpi-value" id="kpiPrecio">-</div><div class="kpi-sub" id="kpiPrecioSub"></div></div>
+    <div class="kpi-card"><div class="kpi-label">SKU's Totales</div><div class="kpi-value" id="kpiSKU">-</div><div class="kpi-sub" id="kpiSKUSub"></div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('resumen')">Resumen Ejecutivo</button>
+    <button class="tab-btn" onclick="switchTab('matriz')">Matriz M&amp;A</button>
+    <button class="tab-btn" onclick="switchTab('tendencias')">Tendencias</button>
+    <button class="tab-btn" onclick="switchTab('analisis')">Análisis</button>
+    <button class="tab-btn" onclick="switchTab('detalle')">Detalle Mensual</button>
+  </div>
+
+  <!-- Tab: Resumen Ejecutivo -->
+  <div class="tab-content active" id="tab-resumen">
+    <div class="charts-grid" style="margin-bottom: 24px;">
+      <div class="chart-card">
+        <h3>Top 20 Marcas por Valores MAT (MDP)</h3>
+        <div class="chart-legend" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; font-size: 0.72rem; font-weight: 600; color: var(--text-sec);">
+          <span style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: #0E7C7B; border-radius: 3px;"></span>Target A (Quick Wins)</span>
+          <span style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: #D4890A; border-radius: 3px;"></span>Target B (Estratégico)</span>
+          <span style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: #2C4A8A; border-radius: 3px;"></span>Target C (Especulativo)</span>
+          <span style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: #8A94A6; border-radius: 3px;"></span>Target D (Largo Plazo)</span>
+        </div>
+        <canvas id="chartTopValores"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Top 20 Marcas por Unidades MAT (Miles)</h3>
+        <div class="chart-legend" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; font-size: 0.72rem; font-weight: 600; color: var(--text-sec);">
+          <span style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: #0E7C7B; border-radius: 3px;"></span>Target A (Quick Wins)</span>
+          <span style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: #D4890A; border-radius: 3px;"></span>Target B (Estratégico)</span>
+          <span style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: #2C4A8A; border-radius: 3px;"></span>Target C (Especulativo)</span>
+          <span style="display: flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 12px; height: 12px; background: #8A94A6; border-radius: 3px;"></span>Target D (Largo Plazo)</span>
+        </div>
+        <canvas id="chartTopUnidades"></canvas>
+      </div>
+    </div>
+    <div class="table-section" id="resumenTable">
+      <div class="table-header">
+        <h3>Lista de Marcas Target M&amp;A</h3>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <input type="text" class="search-input" placeholder="Buscar marca..." id="searchMarca">
+          <button class="btn btn-primary" onclick="exportPDF()">Exportar PDF</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table id="mainTable">
+          <thead>
+            <tr>
+              <th data-col="0">#<span class="sort-arrow"></span></th>
+              <th data-col="1">Marca<span class="sort-arrow"></span></th>
+              <th data-col="2">Molécula<span class="sort-arrow"></span></th>
+              <th data-col="3">Corporación<span class="sort-arrow"></span></th>
+              <th data-col="4">Clase Terapéutica<span class="sort-arrow"></span></th>
+              <th data-col="5">Género<span class="sort-arrow"></span></th>
+              <th data-col="6">Nivel<span class="sort-arrow"></span></th>
+              <th data-col="7">Patente<span class="sort-arrow"></span></th>
+              <th data-col="8">Prob<span class="sort-arrow"></span></th>
+              <th data-col="9">Interés<span class="sort-arrow"></span></th>
+              <th data-col="10">Objetivo<span class="sort-arrow"></span></th>
+              <th data-col="11">Score M&amp;A<span class="sort-arrow"></span></th>
+              <th data-col="12">MAT Unidades<span class="sort-arrow"></span></th>
+              <th data-col="13">MAT Valores<span class="sort-arrow"></span></th>
+              <th data-col="14">Precio Prom<span class="sort-arrow"></span></th>
+              <th data-col="15">CAGR 3Y Un<span class="sort-arrow"></span></th>
+              <th data-col="16">CAGR 3Y Val<span class="sort-arrow"></span></th>
+              <th data-col="17">SKU's<span class="sort-arrow"></span></th>
+            </tr>
+          </thead>
+          <tbody id="mainTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Matriz M&A -->
+  <div class="tab-content" id="tab-matriz">
+    <div class="matrix-container">
+      <div class="matrix-header">
+        <h3>Matriz Estratégica de Adquisición M&amp;A</h3>
+        <p>Identifica y prioriza marcas target clasificadas en cuadrantes según su Interés Comercial y Probabilidad de Adquisición.</p>
+      </div>
+      <div class="matrix-grid">
+        <!-- Quadrant 1: Quick Wins -->
+        <div class="quadrant q-quick-wins">
+          <div class="quadrant-title">
+            <span class="quadrant-badge badge-alta">Target A - Quick Wins</span>
+            <span class="quadrant-desc">Alto Interés &amp; Alta Probabilidad (Alta Viabilidad)</span>
+          </div>
+          <div class="quadrant-list" id="quadrant-quick-wins"></div>
+        </div>
+        
+        <!-- Quadrant 2: Strategic -->
+        <div class="quadrant q-strategic">
+          <div class="quadrant-title">
+            <span class="quadrant-badge badge-media">Target B - Estratégico</span>
+            <span class="quadrant-desc">Alto Interés &amp; Media Probabilidad (Negociación requerida)</span>
+          </div>
+          <div class="quadrant-list" id="quadrant-strategic"></div>
+        </div>
+
+        <!-- Quadrant 3: Speculative -->
+        <div class="quadrant q-speculative">
+          <div class="quadrant-title">
+            <span class="quadrant-badge badge-media" style="background:var(--blue-bg);color:var(--blue);border-color:rgba(59, 130, 246, 0.2)">Target C - Especulativo</span>
+            <span class="quadrant-desc">Medio Interés &amp; Alta Probabilidad (Acceso simple)</span>
+          </div>
+          <div class="quadrant-list" id="quadrant-speculative"></div>
+        </div>
+
+        <!-- Quadrant 4: Long-Term Opportunity -->
+        <div class="quadrant q-long-term">
+          <div class="quadrant-title">
+            <span class="quadrant-badge badge-baja" style="background:#f1f5f9;color:#64748b;border-color:rgba(100, 116, 139, 0.2)">Target D - Oportunidad/Largo Plazo</span>
+            <span class="quadrant-desc">Alto/Medio Interés &amp; Baja Probabilidad (Largo plazo)</span>
+          </div>
+          <div class="quadrant-list" id="quadrant-long-term"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Tendencias -->
+  <div class="tab-content" id="tab-tendencias">
+    <div class="charts-grid">
+      <div class="chart-card full"><h3>Tendencia de Valores Mensuales (MDP) - Marcas Filtradas</h3><canvas id="chartTrendValores"></canvas></div>
+      <div class="chart-card full"><h3>Tendencia de Unidades Mensuales (Miles) - Marcas Filtradas</h3><canvas id="chartTrendUnidades"></canvas></div>
+      <div class="chart-card"><h3>Estacionalidad - Variación % Mensual Unidades</h3><canvas id="chartSeasonUn"></canvas></div>
+      <div class="chart-card"><h3>Estacionalidad - Variación % Mensual Valores</h3><canvas id="chartSeasonVal"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Tab: Análisis -->
+  <div class="tab-content" id="tab-analisis">
+    <div class="charts-grid">
+      <div class="chart-card"><h3>Distribución por Clase Terapéutica (Valores)</h3><canvas id="chartCT"></canvas></div>
+      <div class="chart-card"><h3>Distribución por Género (Valores)</h3><canvas id="chartGenero"></canvas></div>
+      <div class="chart-card"><h3>Distribución por Probabilidad (Marcas)</h3><canvas id="chartCategory"></canvas></div> <!-- Fixed ID to chartCategory to avoid duplicate/missing -->
+      <div class="chart-card"><h3>Distribución por Objetivo (Marcas)</h3><canvas id="chartObj"></canvas></div>
+      <div class="chart-card"><h3>Top 15 Corporaciones por Valores MAT (MDP)</h3><canvas id="chartCorps"></canvas></div>
+      <div class="chart-card"><h3>CAGR 3Y Valores vs MAT Valores (Burbuja)</h3><canvas id="chartBubble"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Tab: Detalle Mensual -->
+  <div class="tab-content" id="tab-detalle">
+    <div class="filter-group" style="margin-bottom:20px;max-width:320px">
+      <label>Seleccionar Marca</label>
+      <select id="filterMarcaDetalle" onchange="renderDetalleTab()"><option value="">-- Seleccionar --</option></select>
+    </div>
+    <div class="charts-grid" style="margin-bottom: 24px;">
+      <div class="chart-card full"><h3 id="detalleTrendTitle">Tendencia Mensual de la Marca</h3><canvas id="chartDetalleTrend"></canvas></div>
+    </div>
+    <div class="table-section">
+      <div class="table-header"><h3 id="detalleTableTitle">Detalle Mensual</h3></div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Fecha</th><th>Unidades</th><th>Valores</th><th>Precio Prom</th><th>Var% Un MoM</th><th>Var% Val MoM</th></tr></thead>
+          <tbody id="detalleTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== GLOBAL STATE ======
+let rawData = [];
+let marcasData = [];
+let labsData = {};
+let ctData = {};
+let patentData = {};
+let allDates = [];
+let summaryData = [];
+let filteredSummary = [];
+let charts = {};
+let currentSort = { col: 13, asc: false }; // Sort by MAT Valores Descending by default to match charts!
+
+// Custom multiselect active states
+let activeFilters = {
+  filterCT: [],
+  filterGenero: [],
+  filterCorp: [],
+  filterProb: [],
+  filterObj: [],
+  filterNivel: [],
+  filterPatente: [],
+  filterInteres: [],
+  filterMA: []
+};
+
+// ====== LOADING ======
+function setProgress(pct, text) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  if (text) document.getElementById('loadingText').textContent = text;
+}
+
+function showFatalError(title, htmlBody) {
+  document.getElementById('spinner').style.display = 'none';
+  document.getElementById('loadingText').textContent = '';
+  const pf = document.getElementById('progressFill');
+  if (pf && pf.parentElement) pf.parentElement.style.display = 'none';
+  document.getElementById('errorContainer').innerHTML = `
+    <div class="error-box">
+      <h2>${title}</h2>
+      ${htmlBody}
+    </div>`;
+}
+
+// Convert any input date to YYYY-MM-DD for sortable string comparisons.
+// Accepts DD/MM/YYYY, YYYY-MM-DD, MM/YYYY, etc.
+// Robust numeric parser: tolerates thousands separators (e.g. "1,194,012")
+// that would otherwise truncate at the first comma under parseFloat.
+function toNum(v) {
+  if (typeof v === 'number') return isFinite(v) ? v : 0;
+  if (v == null) return 0;
+  const n = parseFloat(String(v).replace(/,/g, ''));
+  return isFinite(n) ? n : 0;
+}
+
+function normalizeDate(s) {
+  if (!s) return '';
+  s = String(s).trim();
+  let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+  m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+  m = s.match(/^(\d{1,2})[\/\-](\d{4})$/);
+  if (m) return `${m[2]}-${m[1].padStart(2, '0')}-01`;
+  return s;
+}
+
+// Find a field by fuzzy-matching the header name with Spanish accent normalization.
+function findField(row, ...needles) {
+  if (!row) return null;
+  const keys = Object.keys(row);
+  const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
+  for (const needle of needles) {
+    const n = norm(needle);
+    const k = keys.find(k => norm(k).includes(n));
+    if (k) return k;
+  }
+  return null;
+}
+
+async function init() {
+  try {
+    setProgress(20, 'Cargando catálogos...');
+    
+    // Read precompiled datasets from window object
+    const labs = window.labsData || [];
+    const ct = window.ctData || [];
+    const marcas = window.marcasData || [];
+    const patentes = window.patentesData || [];
+    const rawList = window.rawData || [];
+
+    labs.forEach(r => { if (r.Corporacion) labsData[r.Corporacion.toUpperCase()] = r.Nivel; });
+    ct.forEach(r => { if (r.Sigla) ctData[r.Sigla] = r.Significado; });
+
+    if (!marcas.length) throw new Error('Los datos de marcas en data.js están vacíos.');
+    const interesKey = findField(marcas[0], 'inter', 'com'); // Fuzzy and accent-insensitive!
+
+    marcasData = marcas.filter(r => r.Producto).map(r => ({
+      Producto: r.Producto,
+      Distribucion: r.Distribucion || '',
+      Probabilidad: r.Probabilidad || '',
+      Objetivo: r.Objetivo || '',
+      Interes_com: interesKey ? (r[interesKey] || '') : ''
+    }));
+
+    patentes.forEach(r => { if (r.Marca) patentData[r.Marca.toUpperCase()] = r.Patente; });
+
+    setProgress(50, 'Procesando registros de mercado...');
+    
+    // Parse rawData list of lists. Dynamically replace ASOFARMA/Adium with ADIUM.
+    rawData = rawList.map(r => {
+      let corpName = r[2] || '';
+      if (corpName.toUpperCase() === 'ASOFARMA' || corpName.toUpperCase() === 'ADIUM') {
+        corpName = 'ADIUM';
+      }
+      return {
+        producto: r[0],
+        presentacion: r[1] || '',
+        corporacion: corpName,
+        molecula: r[3] || '',
+        genero: r[4] || '',
+        ct1: r[5] || '',
+        fecha: normalizeDate(r[6]),
+        unidades: toNum(r[7]),
+        valores: toNum(r[8])
+      };
+    });
+
+    if (!rawData.length) throw new Error('No se encontraron registros de mercado en rawData.');
+
+    setProgress(80, 'Calculando métricas M&A...');
+    const dateSet = new Set();
+    rawData.forEach(r => { if (r.fecha) dateSet.add(r.fecha); });
+    allDates = Array.from(dateSet).filter(d => /^\d{4}-\d{2}/.test(d)).sort();
+    if (!allDates.length) throw new Error('No se pudieron interpretar las fechas del set de datos.');
+
+    computeSummary();
+    populateFilters();
+    bindEvents();
+    setProgress(95, 'Renderizando dashboard...');
+    applyFilters();
+
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+  } catch (err) {
+    console.error(err);
+    showFatalError('Error cargando el dashboard', `
+      <p>${(err && err.message) ? err.message : err}</p>
+      <p>Asegúrate de que <code>data.js</code> esté en la misma carpeta que este archivo HTML y que cargue correctamente.</p>
+    `);
+  }
+}
+
+// ====== COMPUTE M&A ACQUISITION SCORE ======
+function calculateAcquisitionScore(s) {
+  let score = 0;
+  
+  // 1. Interés Comercial (30 pts)
+  if (s.interes === 'Alto') score += 30;
+  else if (s.interes === 'Medio') score += 15;
+  else if (s.interes === 'Bajo') score += 5;
+  
+  // 2. Probabilidad de Adquisición (30 pts)
+  if (s.prob === 'Alta') score += 30;
+  else if (s.prob === 'Media') score += 15;
+  else if (s.prob === 'Baja') score += 5;
+  
+  // 3. Nivel de Laboratorio (15 pts) - Local is easier to negotiate than MNC!
+  if (s.nivel === 'Local') score += 15;
+  else if (s.nivel === 'MNC') score += 5;
+  
+  // 4. Patente (15 pts) - Generic/Expired is easier to commercialize/acquire
+  if (s.patente === 'Sin_Patente' || s.patente === 'Sin Patente' || !s.patente) score += 15;
+  else if (s.patente === 'Patente') score += 5;
+  
+  // 5. Crecimiento (10 pts) - CAGR 3Y Valores
+  if (s.cagrVal != null && s.cagrVal > 0.10) score += 10;
+  else if (s.cagrVal != null && s.cagrVal > 0) score += 5;
+  
+  return score;
+}
+
+// ====== COMPUTE SUMMARY ======
+function computeSummary() {
+  const byProduct = new Map();
+  rawData.forEach(r => {
+    const key = r.producto.toUpperCase();
+    if (!byProduct.has(key)) byProduct.set(key, { rows: [], name: r.producto });
+    byProduct.get(key).rows.push(r);
+  });
+
+  const lastDate = allDates[allDates.length - 1];
+  const last12Set = new Set(allDates.slice(-12));
+
+  const old12Start = Math.max(0, allDates.length - 48);
+  const old12End = Math.max(0, allDates.length - 36);
+  const old12Set = new Set(allDates.slice(old12Start, old12End));
+
+  const lastYear = lastDate.substring(0, 4);
+  const ytdSet = new Set(allDates.filter(d => d.startsWith(lastYear)));
+
+  const marcasMap = new Map();
+  marcasData.forEach(m => marcasMap.set(m.Producto.toUpperCase(), m));
+
+  summaryData = [];
+
+  byProduct.forEach((info, key) => {
+    const marca = marcasMap.get(key) || {};
+    const rows = info.rows;
+
+    let matUn = 0, matVal = 0;
+    const skuSet = new Set();
+    let oldMatUn = 0, oldMatVal = 0;
+    let ytdUn = 0, ytdVal = 0;
+    const monthly = {};
+    let corp = '', mol = '', genero = '', ct1 = '', descCT = '';
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (!corp && r.corporacion) corp = r.corporacion;
+      if (!mol && r.molecula) mol = r.molecula;
+      if (!genero && r.genero) genero = r.genero;
+      if (!ct1 && r.ct1) ct1 = r.ct1;
+
+      if (last12Set.has(r.fecha)) {
+        matUn += r.unidades;
+        matVal += r.valores;
+        skuSet.add(r.presentacion);
+      }
+      if (old12Set.has(r.fecha)) {
+        oldMatUn += r.unidades;
+        oldMatVal += r.valores;
+      }
+      if (ytdSet.has(r.fecha)) {
+        ytdUn += r.unidades;
+        ytdVal += r.valores;
+      }
+      if (r.fecha) {
+        if (!monthly[r.fecha]) monthly[r.fecha] = { un: 0, val: 0 };
+        monthly[r.fecha].un += r.unidades;
+        monthly[r.fecha].val += r.valores;
+      }
+    }
+
+    const precio = matUn > 0 ? matVal / matUn : 0;
+    let cagrUn = null, cagrVal = null;
+    if (oldMatUn > 0 && matUn > 0) cagrUn = Math.pow(matUn / oldMatUn, 1 / 3) - 1;
+    if (oldMatVal > 0 && matVal > 0) cagrVal = Math.pow(matVal / oldMatVal, 1 / 3) - 1;
+
+    const nivel = labsData[corp.toUpperCase()] || 'Local'; // Default to Local if missing
+    const patente = patentData[key] || '';
+    const ctSignificado = ctData[ct1] || ct1;
+
+    const item = {
+      marca: info.name, molecula: mol, corporacion: corp,
+      ct1, ctSignificado, genero, nivel, patente,
+      prob: marca.Probabilidad || '',
+      interes: marca.Interes_com || '',
+      objetivo: marca.Objetivo || '',
+      matUn, matVal, precio, cagrUn, cagrVal,
+      skus: skuSet.size, ytdUn, ytdVal, monthly
+    };
+    
+    // Dynamic calculation of M&A Acquisition Score
+    item.score = calculateAcquisitionScore(item);
+
+    summaryData.push(item);
+  });
+
+  // Sort by MAT Valores Descending by default to match the charts!
+  summaryData.sort((a, b) => b.matVal - a.matVal);
+
+  // Assign default rank indices after the default sort
+  summaryData.forEach((item, idx) => {
+    item._idx = idx + 1;
+  });
+}
+
+// ====== FILTERS ======
+function populateFilters() {
+  const buildDropdown = (id, values) => {
+    const container = document.getElementById('options-' + id);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    const sortedVals = [...new Set(values)].filter(Boolean).sort((a, b) => String(a).localeCompare(String(b)));
+    
+    sortedVals.forEach(v => {
+      const opt = document.createElement('div');
+      opt.className = 'dropdown-option';
+      
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.value = v;
+      chk.id = `chk-${id}-${v.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      
+      const lbl = document.createElement('label');
+      lbl.setAttribute('for', chk.id);
+      lbl.textContent = v;
+      
+      opt.onclick = (e) => {
+        if (e.target !== chk && e.target !== lbl) {
+          chk.checked = !chk.checked;
+          handleFilterSelection(id);
+        }
+      };
+      
+      chk.onchange = () => {
+        handleFilterSelection(id);
+      };
+      
+      opt.appendChild(chk);
+      opt.appendChild(lbl);
+      container.appendChild(opt);
+    });
+    
+    updateDropdownLabel(id);
+  };
+
+  buildDropdown('filterCT', summaryData.map(s => s.ctSignificado));
+  buildDropdown('filterGenero', summaryData.map(s => s.genero));
+  buildDropdown('filterCorp', summaryData.map(s => s.corporacion));
+  buildDropdown('filterProb', summaryData.map(s => s.prob));
+  buildDropdown('filterObj', summaryData.map(s => s.objetivo));
+  buildDropdown('filterNivel', summaryData.map(s => s.nivel));
+  buildDropdown('filterPatente', summaryData.map(s => s.patente));
+  buildDropdown('filterInteres', summaryData.map(s => s.interes));
+  
+  // Custom build for M&A Priority Score
+  const buildHardcodedDropdown = (id, options) => {
+    const container = document.getElementById('options-' + id);
+    if (!container) return;
+    container.innerHTML = '';
+    
+    options.forEach(optData => {
+      const opt = document.createElement('div');
+      opt.className = 'dropdown-option';
+      
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.value = optData.value;
+      chk.id = `chk-${id}-${optData.value}`;
+      
+      const lbl = document.createElement('label');
+      lbl.setAttribute('for', chk.id);
+      lbl.textContent = optData.text;
+      
+      opt.onclick = (e) => {
+        if (e.target !== chk && e.target !== lbl) {
+          chk.checked = !chk.checked;
+          handleFilterSelection(id);
+        }
+      };
+      
+      chk.onchange = () => {
+        handleFilterSelection(id);
+      };
+      
+      opt.appendChild(chk);
+      opt.appendChild(lbl);
+      container.appendChild(opt);
+    });
+    
+    updateDropdownLabel(id);
+  };
+  
+  buildHardcodedDropdown('filterMA', [
+    { value: 'Alta', text: 'Prioridad Alta (Score >= 70)' },
+    { value: 'Media', text: 'Prioridad Media (40 - 69)' },
+    { value: 'Baja', text: 'Prioridad Baja (< 40)' }
+  ]);
+
+  const detSel = document.getElementById('filterMarcaDetalle');
+  detSel.innerHTML = '<option value="">-- Seleccionar --</option>';
+  summaryData.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.marca; o.textContent = s.marca; detSel.appendChild(o);
+  });
+}
+
+function toggleDropdown(e, id) {
+  e.stopPropagation();
+  const menu = document.getElementById('menu-' + id);
+  const trigger = menu.previousElementSibling;
+  
+  const isShow = menu.classList.contains('show');
+  
+  // Close all menus
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+  document.querySelectorAll('.dropdown-trigger').forEach(t => t.classList.remove('open'));
+  
+  if (!isShow) {
+    menu.classList.add('show');
+    trigger.classList.add('open');
+  }
+}
+
+function selectAllOptions(e, id) {
+  e.stopPropagation();
+  const checkboxes = document.querySelectorAll(`#options-${id} input[type="checkbox"]`);
+  checkboxes.forEach(c => c.checked = true);
+  handleFilterSelection(id);
+}
+
+function clearAllOptions(e, id) {
+  e.stopPropagation();
+  const checkboxes = document.querySelectorAll(`#options-${id} input[type="checkbox"]`);
+  checkboxes.forEach(c => c.checked = false);
+  handleFilterSelection(id);
+}
+
+function handleFilterSelection(id) {
+  const checkboxes = document.querySelectorAll(`#options-${id} input[type="checkbox"]`);
+  const selected = [];
+  checkboxes.forEach(c => {
+    if (c.checked) selected.push(c.value);
+  });
+  activeFilters[id] = selected;
+  updateDropdownLabel(id);
+  applyFilters();
+}
+
+function updateDropdownLabel(id) {
+  const selected = activeFilters[id];
+  const textEl = document.getElementById('text-' + id);
+  const checkboxes = document.querySelectorAll(`#options-${id} input[type="checkbox"]`);
+  
+  if (selected.length === 0 || selected.length === checkboxes.length) {
+    textEl.textContent = 'Todas';
+    textEl.style.color = 'var(--text-sec)';
+    textEl.style.fontWeight = '500';
+  } else if (selected.length <= 2) {
+    textEl.textContent = selected.join(', ');
+    textEl.style.color = 'var(--primary-hover)';
+    textEl.style.fontWeight = '600';
+  } else {
+    textEl.textContent = `${selected.length} seleccionadas`;
+    textEl.style.color = 'var(--primary-hover)';
+    textEl.style.fontWeight = '600';
+  }
+}
+
+function bindEvents() {
+  let searchTimer;
+  document.getElementById('searchMarca').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(applyFilters, 200);
+  });
+
+  document.querySelectorAll('#mainTable thead th').forEach(th => {
+    th.addEventListener('click', () => sortTable(parseInt(th.dataset.col, 10)));
+  });
+  
+  // Close dropdowns when clicking outside
+  window.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown-container')) {
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+      document.querySelectorAll('.dropdown-trigger').forEach(t => t.classList.remove('open'));
+    }
+  });
+}
+
+function applyFilters() {
+  const search = document.getElementById('searchMarca').value.toUpperCase();
+
+  filteredSummary = summaryData.filter(s => {
+    if (activeFilters.filterCT.length > 0 && !activeFilters.filterCT.includes(s.ctSignificado)) return false;
+    if (activeFilters.filterGenero.length > 0 && !activeFilters.filterGenero.includes(s.genero)) return false;
+    if (activeFilters.filterCorp.length > 0 && !activeFilters.filterCorp.includes(s.corporacion)) return false;
+    if (activeFilters.filterProb.length > 0 && !activeFilters.filterProb.includes(s.prob)) return false;
+    if (activeFilters.filterObj.length > 0 && !activeFilters.filterObj.includes(s.objetivo)) return false;
+    if (activeFilters.filterNivel.length > 0 && !activeFilters.filterNivel.includes(s.nivel)) return false;
+    if (activeFilters.filterPatente.length > 0 && !activeFilters.filterPatente.includes(s.patente)) return false;
+    if (activeFilters.filterInteres.length > 0 && !activeFilters.filterInteres.includes(s.interes)) return false;
+    
+    if (activeFilters.filterMA.length > 0) {
+      let matchMA = false;
+      activeFilters.filterMA.forEach(val => {
+        if (val === 'Alta' && s.score >= 70) matchMA = true;
+        if (val === 'Media' && s.score >= 40 && s.score < 70) matchMA = true;
+        if (val === 'Baja' && s.score < 40) matchMA = true;
+      });
+      if (!matchMA) return false;
+    }
+    
+    if (search && !s.marca.toUpperCase().includes(search)) return false;
+    return true;
+  });
+
+  document.getElementById('filterStatus').textContent =
+    `${filteredSummary.length} de ${summaryData.length} marcas`;
+
+  // Preserve the active sort column!
+  sortFilteredSummary();
+
+  renderKPIs();
+  renderResumenTable();
+  renderResumenCharts();
+  renderTrendCharts();
+  renderAnalisisCharts();
+  renderMatrix();
+}
+
+function resetFilters() {
+  Object.keys(activeFilters).forEach(key => {
+    activeFilters[key] = [];
+    const checkboxes = document.querySelectorAll(`#options-${key} input[type="checkbox"]`);
+    checkboxes.forEach(c => c.checked = false);
+    updateDropdownLabel(key);
+  });
+  document.getElementById('searchMarca').value = '';
+  applyFilters();
+}
+
+// ====== KPIs ======
+function renderKPIs() {
+  const d = filteredSummary;
+  const totalMarcas = d.length;
+  const totalVal = d.reduce((s, r) => s + r.matVal, 0);
+  const totalUn = d.reduce((s, r) => s + r.matUn, 0);
+  const avgPrecio = totalUn > 0 ? totalVal / totalUn : 0;
+  const totalSKU = d.reduce((s, r) => s + r.skus, 0);
+  const highPriority = d.filter(r => r.score >= 70).length;
+
+  document.getElementById('kpiMarcas').textContent = totalMarcas;
+  document.getElementById('kpiMarcasSub').textContent = `${highPriority} Prioridad Alta M&A`;
+  document.getElementById('kpiValores').textContent = '$' + (totalVal / 1e6).toFixed(0);
+  document.getElementById('kpiValoresSub').textContent = 'Millones de pesos MAT';
+  document.getElementById('kpiUnidades').textContent = (totalUn / 1e6).toFixed(1) + 'M';
+  document.getElementById('kpiUnidadesSub').textContent = 'Unidades MAT';
+  document.getElementById('kpiPrecio').textContent = '$' + avgPrecio.toFixed(1);
+  document.getElementById('kpiPrecioSub').textContent = 'Promedio ponderado';
+  document.getElementById('kpiSKU').textContent = totalSKU;
+  document.getElementById('kpiSKUSub').textContent = 'Presentaciones activas';
+}
+
+// ====== TABLE RENDER ======
+const fmtNum = (n, dec = 0) => (n != null && !isNaN(n)) ? n.toLocaleString('es-MX', { minimumFractionDigits: dec, maximumFractionDigits: dec }) : '-';
+const fmtPct = n => n != null ? (n * 100).toFixed(1) + '%' : '-';
+const pctClass = n => n == null ? '' : n >= 0 ? 'pos' : 'neg';
+const escapeHtml = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function probBadge(p) {
+  if (!p) return '';
+  const cls = p === 'Alta' ? 'badge-alta' : p === 'Media' ? 'badge-media' : p === 'Baja' ? 'badge-baja' : 'badge-nd';
+  return `<span class="badge ${cls}">${escapeHtml(p)}</span>`;
+}
+function patBadge(p) {
+  if (!p) return '';
+  const cls = p === 'Patente' ? 'badge-patente' : 'badge-sinpatente';
+  return `<span class="badge ${cls}">${escapeHtml(p)}</span>`;
+}
+function scoreBadge(score) {
+  let cls = 'badge-nd';
+  let label = 'Baja';
+  if (score >= 70) {
+    cls = 'badge-alta';
+    label = 'Alta';
+  } else if (score >= 40) {
+    cls = 'badge-media';
+    label = 'Media';
+  }
+  return `<span class="badge ${cls}" style="font-weight:700; border-radius:6px; padding:3px 6px;">${score} - ${label}</span>`;
+}
+
+function renderResumenTable() {
+  const tbody = document.getElementById('mainTableBody');
+  if (!filteredSummary.length) {
+    tbody.innerHTML = '<tr><td colspan="18" class="empty-state">No hay marcas que coincidan con los filtros aplicados.</td></tr>';
+    return;
+  }
+  const rows = filteredSummary.map((s, i) => {
+    const molTrunc = s.molecula.length > 30 ? escapeHtml(s.molecula.substring(0, 30)) + '...' : escapeHtml(s.molecula);
+    return `
+      <tr>
+        <td class="num">${i + 1}</td>
+        <td><strong style="color:var(--primary-light); cursor:pointer;" onclick="viewBrandDetail('${escapeHtml(s.marca)}')">${escapeHtml(s.marca)}</strong></td>
+        <td title="${escapeHtml(s.molecula)}">${molTrunc}</td>
+        <td>${escapeHtml(s.corporacion)}</td>
+        <td>${escapeHtml(s.ctSignificado)}</td>
+        <td>${escapeHtml(s.genero)}</td>
+        <td>${escapeHtml(s.nivel)}</td>
+        <td>${patBadge(s.patente)}</td>
+        <td>${probBadge(s.prob)}</td>
+        <td>${escapeHtml(s.interes)}</td>
+        <td>${escapeHtml(s.objetivo)}</td>
+        <td class="num">${scoreBadge(s.score)}</td>
+        <td class="num">${fmtNum(s.matUn)}</td>
+        <td class="num">$${fmtNum(s.matVal)}</td>
+        <td class="num">$${fmtNum(s.precio, 1)}</td>
+        <td class="num ${pctClass(s.cagrUn)}">${fmtPct(s.cagrUn)}</td>
+        <td class="num ${pctClass(s.cagrVal)}">${fmtPct(s.cagrVal)}</td>
+        <td class="num">${s.skus}</td>
+      </tr>`;
+  }).join('');
+  tbody.innerHTML = rows;
+
+  document.querySelectorAll('#mainTable thead th').forEach(th => {
+    const col = parseInt(th.dataset.col, 10);
+    th.classList.toggle('sort-active', col === currentSort.col);
+    const arrow = th.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = col === currentSort.col ? (currentSort.asc ? '\u25B2' : '\u25BC') : '';
+  });
+}
+
+function viewBrandDetail(marcaName) {
+  document.getElementById('filterMarcaDetalle').value = marcaName;
+  switchTab('detalle');
+}
+
+function sortFilteredSummary() {
+  const col = currentSort.col;
+  const keys = ['_idx','marca','molecula','corporacion','ctSignificado','genero','nivel','patente','prob','interes','objetivo','score','matUn','matVal','precio','cagrUn','cagrVal','skus'];
+  const key = keys[col];
+  const dir = currentSort.asc ? 1 : -1;
+  
+  filteredSummary.sort((a, b) => {
+    let va = a[key], vb = b[key];
+    
+    // Always push null/undefined/empty string to the bottom
+    const aIsNull = (va == null || va === '');
+    const bIsNull = (vb == null || vb === '');
+    if (aIsNull && bIsNull) return 0;
+    if (aIsNull) return 1;
+    if (bIsNull) return -1;
+    
+    if (typeof va === 'string') {
+      return va.localeCompare(vb) * dir;
+    }
+    return (va - vb) * dir;
+  });
+}
+
+function sortTable(col) {
+  if (currentSort.col === col) {
+    currentSort.asc = !currentSort.asc;
+  } else {
+    currentSort.col = col;
+    currentSort.asc = col <= 10;
+  }
+  sortFilteredSummary();
+  renderResumenTable();
+}
+
+// ====== INTERACTIVE M&A TARGET QUADRANTS ======
+function renderMatrix() {
+  const qQuickWins = document.getElementById('quadrant-quick-wins');
+  const qStrategic = document.getElementById('quadrant-strategic');
+  const qSpeculative = document.getElementById('quadrant-speculative');
+  const qLongTerm = document.getElementById('quadrant-long-term');
+  
+  if (!qQuickWins || !qStrategic || !qSpeculative || !qLongTerm) return;
+  
+  qQuickWins.innerHTML = '';
+  qStrategic.innerHTML = '';
+  qSpeculative.innerHTML = '';
+  qLongTerm.innerHTML = '';
+  
+  const createMatrixCard = s => {
+    const card = document.createElement('div');
+    card.className = 'matrix-card';
+    card.onclick = () => {
+      document.getElementById('filterMarcaDetalle').value = s.marca;
+      switchTab('detalle');
+    };
+    
+    let priorityClass = 'badge-nd';
+    if (s.score >= 70) priorityClass = 'badge-alta';
+    else if (s.score >= 40) priorityClass = 'badge-media';
+    
+    card.innerHTML = `
+      <div class="matrix-card-header">
+        <strong title="${escapeHtml(s.marca)}">${escapeHtml(s.marca)}</strong>
+        <span class="badge ${priorityClass}">${s.score} pts</span>
+      </div>
+      <div class="matrix-card-body">
+        <div><span>Corp:</span> ${escapeHtml(s.corporacion)} (${escapeHtml(s.nivel)})</div>
+        <div style="margin-top:2px;"><span>MAT:</span> <strong style="color:var(--primary-hover)">$${fmtNum(s.matVal / 1e6, 0)}M</strong> | <span>Un:</span> ${fmtNum(s.matUn / 1e3, 0)}K</div>
+        <div style="margin-top:4px; display:flex; gap:4px; flex-wrap:wrap;">
+          <span class="badge badge-sinpatente" style="font-size:0.65rem; padding:1px 4px;">${escapeHtml(s.prob)}</span>
+          <span class="badge badge-patente" style="font-size:0.65rem; padding:1px 4px; background:var(--orange-bg); color:var(--orange);">${escapeHtml(s.interes)}</span>
+        </div>
+      </div>
+    `;
+    return card;
+  };
+
+  let countQuick = 0, countStrat = 0, countSpec = 0, countLong = 0;
+  
+  filteredSummary.forEach(s => {
+    const isHighInt = s.interes === 'Alto';
+    const isMedInt = s.interes === 'Medio';
+    
+    const isHighProb = s.prob === 'Alta';
+    const isMedProb = s.prob === 'Media';
+    
+    if (isHighInt && isHighProb) {
+      qQuickWins.appendChild(createMatrixCard(s));
+      countQuick++;
+    } else if (isHighInt && isMedProb) {
+      qStrategic.appendChild(createMatrixCard(s));
+      countStrat++;
+    } else if (isMedInt && isHighProb) {
+      qSpeculative.appendChild(createMatrixCard(s));
+      countSpec++;
+    } else if ((isHighInt || isMedInt) && s.prob === 'Baja') {
+      qLongTerm.appendChild(createMatrixCard(s));
+      countLong++;
+    }
+  });
+
+  const checkEmpty = (el, count) => {
+    if (count === 0) {
+      el.innerHTML = `<div class="empty-state" style="padding:20px; font-size:0.8rem; color:var(--text-sec)">No hay marcas en este cuadrante.</div>`;
+    }
+  };
+  checkEmpty(qQuickWins, countQuick);
+  checkEmpty(qStrategic, countStrat);
+  checkEmpty(qSpeculative, countSpec);
+  checkEmpty(qLongTerm, countLong);
+}
+
+// ====== CHARTS RENDER ======
+const USER_PALETTE = ["#1B2A4A", "#2C4A8A", "#C00000", "#0E7C7B", "#D4890A", "#8B5CF6", "#E8EAF0", "#8A94A6"];
+const COLORS = [];
+for (let i = 0; i < 40; i++) {
+  COLORS.push(USER_PALETTE[i % USER_PALETTE.length]);
+}
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderResumenCharts() {
+  // Sort descending by value and units to show actual top 20 respectively
+  const top20Val = [...filteredSummary].sort((a, b) => b.matVal - a.matVal).slice(0, 20);
+  const top20Un = [...filteredSummary].sort((a, b) => b.matUn - a.matUn).slice(0, 20);
+
+  const getMatrixCategoryColor = (s) => {
+    const isHighInt = s.interes === 'Alto';
+    const isMedInt = s.interes === 'Medio';
+    const isHighProb = s.prob === 'Alta';
+    const isMedProb = s.prob === 'Media';
+
+    if (isHighInt && isHighProb) return '#0E7C7B'; // Target A - Quick Wins (Pine Teal)
+    if (isHighInt && isMedProb) return '#D4890A';  // Target B - Estratégico (Amber/Gold)
+    if (isMedInt && isHighProb) return '#2C4A8A';  // Target C - Especulativo (Indigo Blue)
+    return '#8A94A6'; // Target D - Oportunidad/Largo Plazo or other (Gray)
+  };
+
+  destroyChart('chartTopValores');
+  charts['chartTopValores'] = new Chart(document.getElementById('chartTopValores'), {
+    type: 'bar',
+    data: { labels: top20Val.map(s => s.marca), datasets: [{
+      label: 'MAT Valores (MDP)', data: top20Val.map(s => s.matVal / 1e6),
+      backgroundColor: top20Val.map(s => getMatrixCategoryColor(s)), borderRadius: 6
+    }]},
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { 
+        x: { ticks: { callback: v => '$' + v.toFixed(0) } }
+      }
+    }
+  });
+
+  destroyChart('chartTopUnidades');
+  charts['chartTopUnidades'] = new Chart(document.getElementById('chartTopUnidades'), {
+    type: 'bar',
+    data: { labels: top20Un.map(s => s.marca), datasets: [{
+      label: 'MAT Unidades (Miles)', data: top20Un.map(s => s.matUn / 1e3),
+      backgroundColor: top20Un.map(s => getMatrixCategoryColor(s)), borderRadius: 6
+    }]},
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { 
+        x: { ticks: { callback: v => v.toFixed(0) + 'K' } }
+      }
+    }
+  });
+}
+
+function renderTrendCharts() {
+  const monthlyTotals = {};
+  allDates.forEach(d => { monthlyTotals[d] = { un: 0, val: 0 }; });
+  filteredSummary.forEach(s => {
+    Object.entries(s.monthly).forEach(([d, v]) => {
+      if (monthlyTotals[d]) {
+        monthlyTotals[d].un += v.un;
+        monthlyTotals[d].val += v.val;
+      }
+    });
+  });
+
+  const labels = allDates.map(d => d.substring(0, 7));
+  const valData = allDates.map(d => monthlyTotals[d].val / 1e6);
+  const unData = allDates.map(d => monthlyTotals[d].un / 1e3);
+
+  destroyChart('chartTrendValores');
+  charts['chartTrendValores'] = new Chart(document.getElementById('chartTrendValores'), {
+    type: 'line',
+    data: { labels, datasets: [{
+      label: 'Valores (MDP)', data: valData,
+      borderColor: '#1B2A4A', backgroundColor: 'rgba(27,42,74,0.06)',
+      fill: true, tension: .3, pointRadius: 2
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { ticks: { callback: v => '$' + v.toFixed(0) + 'M' } } }
+    }
+  });
+
+  destroyChart('chartTrendUnidades');
+  charts['chartTrendUnidades'] = new Chart(document.getElementById('chartTrendUnidades'), {
+    type: 'line',
+    data: { labels, datasets: [{
+      label: 'Unidades (Miles)', data: unData,
+      borderColor: '#2C4A8A', backgroundColor: 'rgba(44,74,138,0.06)',
+      fill: true, tension: .3, pointRadius: 2
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { ticks: { callback: v => v.toFixed(0) + 'K' } } }
+    }
+  });
+
+  const monthNames = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const seasonUn = Array.from({length: 12}, () => []);
+  const seasonVal = Array.from({length: 12}, () => []);
+
+  for (let i = 1; i < allDates.length; i++) {
+    const m = parseInt(allDates[i].substring(5, 7), 10) - 1;
+    const prev = monthlyTotals[allDates[i - 1]];
+    const curr = monthlyTotals[allDates[i]];
+    if (prev.un > 0) seasonUn[m].push((curr.un - prev.un) / prev.un);
+    if (prev.val > 0) seasonVal[m].push((curr.val - prev.val) / prev.val);
+  }
+
+  const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length * 100 : 0;
+  const avgSeasonUn = seasonUn.map(avg);
+  const avgSeasonVal = seasonVal.map(avg);
+
+  destroyChart('chartSeasonUn');
+  charts['chartSeasonUn'] = new Chart(document.getElementById('chartSeasonUn'), {
+    type: 'bar',
+    data: { labels: monthNames, datasets: [{
+      label: 'Var% Unidades', data: avgSeasonUn,
+      backgroundColor: avgSeasonUn.map(v => v >= 0 ? '#0E7C7B' : '#C00000'),
+      borderRadius: 4
+    }]},
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { ticks: { callback: v => v.toFixed(1) + '%' } } }
+    }
+  });
+
+  destroyChart('chartSeasonVal');
+  charts['chartSeasonVal'] = new Chart(document.getElementById('chartSeasonVal'), {
+    type: 'bar',
+    data: { labels: monthNames, datasets: [{
+      label: 'Var% Valores', data: avgSeasonVal,
+      backgroundColor: avgSeasonVal.map(v => v >= 0 ? '#2C4A8A' : '#C00000'),
+      borderRadius: 4
+    }]},
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { ticks: { callback: v => v.toFixed(1) + '%' } } }
+    }
+  });
+}
+
+function renderAnalisisCharts() {
+  const d = filteredSummary;
+
+  const byCT = {};
+  d.forEach(s => { byCT[s.ctSignificado || 'N/A'] = (byCT[s.ctSignificado || 'N/A'] || 0) + s.matVal; });
+  const ctEntries = Object.entries(byCT).sort((a, b) => b[1] - a[1]);
+
+  destroyChart('chartCT');
+  charts['chartCT'] = new Chart(document.getElementById('chartCT'), {
+    type: 'bar',
+    data: {
+      labels: ctEntries.map(e => e[0]),
+      datasets: [{
+        label: 'Valores (MDP)',
+        data: ctEntries.map(e => e[1] / 1e6),
+        backgroundColor: COLORS.slice(0, ctEntries.length),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { 
+        x: { ticks: { callback: v => '$' + v.toFixed(0) + 'M' } }
+      }
+    }
+  });
+
+  const byGen = {};
+  d.forEach(s => { byGen[s.genero || 'N/A'] = (byGen[s.genero || 'N/A'] || 0) + s.matVal; });
+  const genEntries = Object.entries(byGen).sort((a, b) => b[1] - a[1]);
+
+  destroyChart('chartGenero');
+  charts['chartGenero'] = new Chart(document.getElementById('chartGenero'), {
+    type: 'bar',
+    data: {
+      labels: genEntries.map(e => e[0]),
+      datasets: [{
+        label: 'Valores (MDP)',
+        data: genEntries.map(e => e[1] / 1e6),
+        backgroundColor: ['#1B2A4A', '#2C4A8A', '#0E7C7B', '#D4890A'].slice(0, genEntries.length),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { 
+        x: { ticks: { callback: v => '$' + v.toFixed(0) + 'M' } }
+      }
+    }
+  });
+
+  const byProb = {};
+  d.forEach(s => { byProb[s.prob || 'N/D'] = (byProb[s.prob || 'N/D'] || 0) + 1; });
+  const probEntries = Object.entries(byProb).sort((a, b) => b[1] - a[1]);
+
+  destroyChart('chartCategory');
+  charts['chartCategory'] = new Chart(document.getElementById('chartCategory'), {
+    type: 'bar',
+    data: {
+      labels: probEntries.map(e => e[0]),
+      datasets: [{
+        label: 'Marcas',
+        data: probEntries.map(e => e[1]),
+        backgroundColor: ['#0E7C7B', '#D4890A', '#C00000', '#8A94A6'].slice(0, probEntries.length),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+
+  const byObj = {};
+  d.forEach(s => { byObj[s.objetivo || 'N/D'] = (byObj[s.objetivo || 'N/D'] || 0) + 1; });
+  const objEntries = Object.entries(byObj).sort((a, b) => b[1] - a[1]);
+
+  destroyChart('chartObj');
+  charts['chartObj'] = new Chart(document.getElementById('chartObj'), {
+    type: 'bar',
+    data: {
+      labels: objEntries.map(e => e[0]),
+      datasets: [{
+        label: 'Marcas',
+        data: objEntries.map(e => e[1]),
+        backgroundColor: ['#1B2A4A', '#2C4A8A', '#0E7C7B', '#D4890A', '#C00000'].slice(0, objEntries.length),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+
+  const byCorp = {};
+  d.forEach(s => { byCorp[s.corporacion || 'N/A'] = (byCorp[s.corporacion || 'N/A'] || 0) + s.matVal; });
+  const corpEntries = Object.entries(byCorp).sort((a, b) => b[1] - a[1]).slice(0, 15);
+
+  destroyChart('chartCorps');
+  charts['chartCorps'] = new Chart(document.getElementById('chartCorps'), {
+    type: 'bar',
+    data: { labels: corpEntries.map(e => e[0]), datasets: [{
+      label: 'MAT Valores (MDP)', data: corpEntries.map(e => e[1] / 1e6),
+      backgroundColor: COLORS.slice(0, 15), borderRadius: 4
+    }]},
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { 
+        x: { ticks: { callback: v => '$' + v.toFixed(0) + 'M' } }
+      }
+    }
+  });
+
+  const bubbleData = d.filter(s => s.cagrVal != null && s.matVal > 0).slice(0, 40).map(s => ({
+    x: s.cagrVal * 100,
+    y: s.matVal / 1e6,
+    r: Math.max(4, Math.min(20, s.matUn / 500000)),
+    label: s.marca
+  }));
+
+  destroyChart('chartBubble');
+  charts['chartBubble'] = new Chart(document.getElementById('chartBubble'), {
+    type: 'bubble',
+    data: { datasets: [{
+      label: 'Marcas', data: bubbleData,
+      backgroundColor: bubbleData.map((_, i) => COLORS[i % COLORS.length] + '99')
+    }]},
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => {
+          const p = ctx.raw;
+          return `${bubbleData[ctx.dataIndex].label}: CAGR ${p.x.toFixed(1)}%, MAT $${p.y.toFixed(0)}M`;
+        }}}
+      },
+      scales: {
+        x: { title: { display: true, text: 'CAGR 3Y Valores (%)' }, ticks: { callback: v => v + '%' } },
+        y: { title: { display: true, text: 'MAT Valores (MDP)' }, ticks: { callback: v => '$' + v } }
+      }
+    }
+  });
+}
+
+// ====== DETALLE TAB ======
+function renderDetalleTab() {
+  const marca = document.getElementById('filterMarcaDetalle').value;
+  if (!marca) return;
+
+  const s = summaryData.find(x => x.marca === marca);
+  if (!s) return;
+
+  document.getElementById('detalleTrendTitle').textContent = `Tendencia Mensual - ${marca}`;
+  document.getElementById('detalleTableTitle').textContent = `Detalle Mensual - ${marca}`;
+
+  const dates = allDates.filter(d => s.monthly[d]);
+  const vals = dates.map(d => s.monthly[d].val / 1e6);
+  const uns = dates.map(d => s.monthly[d].un / 1e3);
+  const labels = dates.map(d => d.substring(0, 7));
+
+  destroyChart('chartDetalleTrend');
+  charts['chartDetalleTrend'] = new Chart(document.getElementById('chartDetalleTrend'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: 'Valores (MDP)', data: vals, borderColor: '#1B2A4A', backgroundColor: 'rgba(27,42,74,0.06)', fill: true, tension: .3, yAxisID: 'y' },
+      { label: 'Unidades (Miles)', data: uns, borderColor: '#2C4A8A', borderDash: [5, 3], tension: .3, yAxisID: 'y1' }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { position: 'left', title: { display: true, text: 'Valores (MDP)' }, ticks: { callback: v => '$' + v.toFixed(1) } },
+        y1: { position: 'right', title: { display: true, text: 'Unidades (Miles)' }, grid: { drawOnChartArea: false } }
+      }
+    }
+  });
+
+  const tbody = document.getElementById('detalleTableBody');
+  const rows = dates.map((d, i) => {
+    const m = s.monthly[d];
+    const prev = i > 0 ? s.monthly[dates[i - 1]] : null;
+    const varUn = prev && prev.un > 0 ? (m.un - prev.un) / prev.un : null;
+    const varVal = prev && prev.val > 0 ? (m.val - prev.val) / prev.val : null;
+    return `
+      <tr>
+        <td>${d.substring(0, 7)}</td>
+        <td class="num">${fmtNum(m.un)}</td>
+        <td class="num">$${fmtNum(m.val)}</td>
+        <td class="num">$${m.un > 0 ? fmtNum(m.val / m.un, 1) : '-'}</td>
+        <td class="num ${pctClass(varUn)}">${varUn != null ? fmtPct(varUn) : '-'}</td>
+        <td class="num ${pctClass(varVal)}">${varVal != null ? fmtPct(varVal) : '-'}</td>
+      </tr>`;
+  }).join('');
+  tbody.innerHTML = rows;
+}
+
+// ====== TABS ======
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelector(`.tab-btn[onclick="switchTab('${name}')"]`).classList.add('active');
+  if (name === 'detalle') renderDetalleTab();
+  if (name === 'matriz') renderMatrix();
+}
+
+// ====== PDF EXPORT ======
+function exportPDF() {
+  const element = document.getElementById('resumenTable');
+  if (!element) return;
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: 'RAL_Targets_Resumen.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, scrollX: 0, scrollY: 0, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' },
+    pagebreak: { mode: ['avoid-all', 'css'] }
+  };
+  html2pdf().set(opt).from(element).save();
+}
+
+// ====== INIT ======
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
